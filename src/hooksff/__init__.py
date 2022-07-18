@@ -1,5 +1,6 @@
 """
 HooksFF: Hooks for functions.
+
 MIT License
 
 Copyright (c) 2022 Koviubi56
@@ -73,6 +74,12 @@ class HookResponse(abc.ABC):
     """An ABC for hook responses."""
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the hook response.
+
+        Returns:
+            str: A string representation of the hook response.
+        """
         return f"<HookResponse {self.__class__.__qualname__}>"
 
 
@@ -87,16 +94,27 @@ class ReturnHookWarning(UserWarning):
 
 
 class HookTypeErrorWarning(UserWarning):
-    """Maybe you forgot to pass the right number of arguments?"""
+    """This is issued, when a TypeError was raised during a hook call."""
 
 
 class Return(HookResponse):
-    """A hook response to return a value. Note that if use this, the return\
- hooks will NOT be called!"""
+    """
+    A hook response to return a value.
+
+    Note that if use this, the return hooks will NOT be called.
+    """
 
     __slots__ = ("value",)
 
     def __init__(self, value: R, *, ignore_warning: bool = False):
+        """
+        Initialize a `Return` instance.
+
+        Args:
+            value (R): The value to return.
+            ignore_warning (bool, optional): If True, no ReturnHookWarnings
+            will be issued. Defaults to False.
+        """
         if not ignore_warning:
             warnings.warn(
                 "Probably this isn't what you want. Try `return_hook_for`"
@@ -113,6 +131,13 @@ class Change(HookResponse):
     __slots__ = ("args", "kwargs")
 
     def __init__(self, *args: Any, **kwargs: Any):
+        """
+        Initialize a `Change` instance.
+
+        Args:
+            *args: The positional arguments to change.
+            **kwargs: The keyword arguments to change.
+        """
         self.args = args
         self.kwargs = kwargs
 
@@ -127,12 +152,12 @@ def remove_hooks_for(name: str, raise_on_keyerror: bool = False) -> None:
 
     Args:
         name (str): The name of the hooks to remove.
-        raise_on_keyerror (bool, optional): Whether to raise a KeyError if the\
- name is not found. Defaults to False.
+        raise_on_keyerror (bool, optional): Whether to raise a KeyError if the
+        name is not found. Defaults to False.
 
     Raises:
-        KeyError: If no hooks were found for the given name and\
- `raise_on_keyerror` is truthy.
+        KeyError: If no hooks were found for the given name and
+        `raise_on_keyerror` is truthy.
     """
     try:
         hooks.pop(name)
@@ -164,9 +189,9 @@ def run_hooks_for(
         kwargs (Any): The keyword arguments.
 
     Returns:
-        Union[Args, Any]: The result of the hooks. If it's an Args, the\
- function should be called with that args. If it's something else, it should\
- be considered the return value of the function.
+        Union[Args, Any]: The result of the hooks. If it's an Args, the
+        function should be called with that args. If it's something else, it
+        should be considered the return value of the function.
     """
     for hook in hooks.get(name, ()):
         try:
@@ -216,8 +241,8 @@ def mark_as_hookable(
         name (str): The name.
 
     Returns:
-        Callable[[Callable[P, R]], Callable[P, R]]: The decorator. If you call\
- it you get the actual function.
+        Callable[[Callable[P, R]], Callable[P, R]]: The decorator. If you call
+        it you get the actual function.
     """
 
     def mah(func: Callable[P, R]) -> Callable[P, R]:
@@ -315,6 +340,17 @@ def already_exists(
     func: Callable[..., Any],
     mode: DUPE_MODE,
 ) -> bool:
+    """
+    Check if a function already exists in a list of functions.
+
+    Args:
+        in_ (Iterable[Callable[..., Any]]): The list of functions.
+        func (Callable[..., Any]): The function to check for.
+        mode (DUPE_MODE): The mode to use.
+
+    Returns:
+        bool: Whether the function already exists.
+    """
     if mode == "rem_nothing":
         return False  # For faster performance
     return any(is_dupe(f, func, mode) for f in in_)
@@ -332,8 +368,8 @@ def hook_for(
         rem_dupe (DUPE_MODE): The mode to use when removing duplicates.
 
     Returns:
-        Callable[[Callable[P, HookResponse]], Callable[P, HookResponse]]: The\
- decorator. If you call it you get the actual function.
+        Callable[[Callable[P, HookResponse]], Callable[P, HookResponse]]: The
+        decorator. If you call it you get the actual function.
     """
 
     def hf(func: Callable[P, HookResponse]) -> Callable[P, HookResponse]:
@@ -357,8 +393,8 @@ def return_hook_for(
         rem_dupe (DUPE_MODE): The mode to use when removing duplicates.
 
     Returns:
-        Callable[[Callable[P, R]], Callable[P, R]]: The decorator. If you call\
- it you get the actual function.
+        Callable[[Callable[P, R]], Callable[P, R]]: The decorator. If you call
+        it you get the actual function.
     """
 
     def rhf(func: Callable[P, R]) -> Callable[P, R]:
