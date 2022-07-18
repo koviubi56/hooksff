@@ -37,9 +37,12 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: |
-            coverage run -m pytest
+            mkdir test-results
+            coverage run -m pytest --junitxml=test-results/junit.xml
             coverage xml
             bash <(curl -Ls https://coverage.codacy.com/get.sh) report -l Python --force-language -r coverage.xml
+      - store_test_results:
+          path: test-results
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
