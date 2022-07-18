@@ -40,7 +40,7 @@ jobs:
             mkdir test-results
             coverage run -m pytest --junitxml=test-results/junit.xml
             coverage xml
-            bash <(curl -Ls https://coverage.codacy.com/get.sh) report -l Python --force-language -r coverage.xml
+            bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
             cat test-results/junit.xml > /tmp/artifacts_junit.xml
             cat coverage.xml > /tmp/artifacts_coverage.xml
       - store_test_results:
