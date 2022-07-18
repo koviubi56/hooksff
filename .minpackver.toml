@@ -1,0 +1,8 @@
+commands = [
+    "{pyexe} -m pip install -Ur requirements.txt pytest-randomly",
+    "{install}",
+    "{pyexe} -m pytest --ff -vv -r A -l --color=yes --code-highlight=yes --continue-on-collection-errors --doctest-modules",
+]
+
+[[packages]]
+name = "typing_extensions"
