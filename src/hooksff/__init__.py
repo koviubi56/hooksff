@@ -97,6 +97,10 @@ class HookTypeErrorWarning(UserWarning):
     """This is issued, when a TypeError was raised during a hook call."""
 
 
+class UnknownHookResponseWarning(UserWarning):
+    """This is issued, when a hook returns an unknown hook response."""
+
+
 class Return(HookResponse):
     """
     A hook response to return a value.
@@ -210,7 +214,10 @@ def run_hooks_for(
         elif isinstance(hr, Change):
             args, kwargs = hr.args, hr.kwargs
         else:
-            warnings.warn(f"Unknown HookResponse type {hr!r} ({type(hr)})")
+            warnings.warn(
+                f"Unknown HookResponse type {hr!r} ({type(hr)})",
+                UnknownHookResponseWarning,
+            )
     return Args(args, kwargs)
 
 
