@@ -23,115 +23,336 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import contextlib
+
+import warnings
+from typing import Callable
+from unittest.mock import Mock
 
 import pytest
 
 import hooksff
 
-
-def setup_function():
-    for name in ("**test", "**test2"):
-        with contextlib.suppress(Exception):
-            hooksff.remove_hooks_for(name)
-        with contextlib.suppress(Exception):
-            del hooksff.hooksff[name]
-        with contextlib.suppress(Exception):
-            del hooksff.return_hooks[name]
+HOOKABLE_NAME = "test"
 
 
-@hooksff.mark_as_hookable("**test")
-def hookable(x, y, *, z):
-    return x + y + z
+def func1() -> None:
+    pass
 
 
-def test_no_thing():
-    assert hookable(1, 2, z=3) == 6
+def func2() -> None:
+    return None
 
 
-def test_none():
-    @hooksff.hook_for("**test")
-    def none(x, y, z):
+@pytest.fixture(scope="function")
+def hookable() -> Callable[[int, int], int]:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.mark_as_hookable(HOOKABLE_NAME)
+    def _(x: int, y: int) -> int:
+        return x - y
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def _hook(x: int, y: int) -> int:
+        return hooksff.Change(y, x)
+
+    return _
+
+
+def test_return_hook_response_warns() -> None:
+    with pytest.warns(
+        hooksff.ReturnHookResponseWarning,
+        match=r"^Probably this isn't what you want\. Try `return_hook_for`"
+        r" instead\.$",
+    ):
+        hooksff.Return(1)
+
+
+def test_return_hook_response_doesnt_warn() -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        hooksff.Return(1, ignore_warning=True)
+
+
+def test_remove_hooks_for(hookable: Callable[[int, int], int]) -> None:
+    assert hookable(1, 2) == 1
+    assert hooksff.hooks[HOOKABLE_NAME]
+
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    assert hookable(1, 2) == -1
+    with pytest.raises(KeyError, match=f"^{HOOKABLE_NAME!r}$"):
+        hooksff.hooks[HOOKABLE_NAME]
+
+
+def test_remove_hooks_for_no_hooks_no_raise(
+    hookable: Callable[[int, int], int]
+) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+    # This should not raise an exception
+
+
+def test_remove_hooks_for_no_hooks_raise(
+    hookable: Callable[[int, int], int]
+) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME, True)
+    with pytest.raises(KeyError, match=f"^{HOOKABLE_NAME!r}$"):
+        hooksff.remove_hooks_for(HOOKABLE_NAME, True)
+
+
+def test_run_hooks_for_donothing(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    mock = Mock(return_value=hooksff.DoNothing())
+    hooksff.hook_for(HOOKABLE_NAME)(mock)
+    mock.assert_not_called()
+
+    assert hooksff.run_hooks_for(HOOKABLE_NAME, (1, 2), {}) == hooksff.Args(
+        (1, 2), {}
+    )
+    mock.assert_called_once_with(1, 2)
+
+
+def test_run_hooks_for_none(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    mock = Mock(return_value=None)
+    hooksff.hook_for(HOOKABLE_NAME)(mock)
+    mock.assert_not_called()
+
+    assert hooksff.run_hooks_for(HOOKABLE_NAME, (1, 2), {}) == hooksff.Args(
+        (1, 2), {}
+    )
+    mock.assert_called_once_with(1, 2)
+
+
+def test_run_hooks_for_return(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def _(x: int, y: int) -> int:
+        return hooksff.Return(x + y, ignore_warning=True)
+
+    assert hooksff.run_hooks_for(HOOKABLE_NAME, (1, 2), {}) == 3
+
+
+def test_run_hooks_for_change(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def _(x: int, y: int) -> int:
+        return hooksff.Change(y, 7)
+
+    assert hooksff.run_hooks_for(HOOKABLE_NAME, (1, 2), {}) == hooksff.Args(
+        (2, 7), {}
+    )
+
+
+def test_run_hooks_for_warns_unknown_response(
+    hookable: Callable[[int, int], int]
+) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def _(x: int, y: int) -> int:
+        return "hello"
+
+    with pytest.warns():
+        assert hooksff.run_hooks_for(
+            HOOKABLE_NAME, (1, 2), {}
+        ) == hooksff.Args((1, 2), {})
+
+
+def test_run_hooks_for(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def _() -> None:
         return None
 
-    assert hookable(1, 2, z=3) == 6
+    with pytest.warns(hooksff.HookTypeErrorWarning):
+        assert hooksff.run_hooks_for(
+            HOOKABLE_NAME, (1, 2), {}
+        ) == hooksff.Args((1, 2), {})
 
 
-def test_donothing():
-    @hooksff.hook_for("**test")
-    def donothing(x, y, z):
-        return hooksff.DoNothing()
+def test_run_return_hooks_for(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
 
-    assert hookable(1, 2, z=3) == 6
+    assert hooksff.run_return_hooks_for(HOOKABLE_NAME, 6) == 6
+
+    @hooksff.return_hook_for(HOOKABLE_NAME)
+    def _(rv: int) -> int:
+        return -rv
+
+    assert hooksff.run_return_hooks_for(HOOKABLE_NAME, 6) == -6
 
 
-def test_return():
-    @hooksff.hook_for("**test")
-    def return_69(x, y, z):
+def test_mark_as_hookable() -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+    assert hooksff.hooks.get(HOOKABLE_NAME) is None
+
+    @hooksff.mark_as_hookable(HOOKABLE_NAME)
+    def _() -> None:
+        return None
+
+    assert hooksff.hooks.get(HOOKABLE_NAME) is None
+    assert _() is None
+
+
+class Test_is_dupe:
+    @staticmethod
+    def test_rem_nothing() -> None:
+        assert not hooksff._is_dupe(func1, func1, "rem_nothing")
+        assert not hooksff._is_dupe(func1, func2, "rem_nothing")
+
+    @staticmethod
+    def test_rem_name() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_name")
+        assert not hooksff._is_dupe(func1, func2, "rem_name")
+
+    @staticmethod
+    def test_rem_qualname() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_qualname")
+        assert not hooksff._is_dupe(func1, func2, "rem_qualname")
+
+    @staticmethod
+    def test_rem_mod_qualname() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_mod_qualname")
+        assert not hooksff._is_dupe(func1, func2, "rem_mod_qualname")
+
+    @staticmethod
+    def test_rem_equals() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_equals")
+        assert not hooksff._is_dupe(func1, func2, "rem_equals")
+
+    @staticmethod
+    def test_rem_is() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_is")
+        assert not hooksff._is_dupe(func1, func2, "rem_is")
+
+    @staticmethod
+    def test_rem_code() -> None:
+        assert hooksff._is_dupe(func1, func1, "rem_code")
+        assert not hooksff._is_dupe(func1, func2, "rem_code")
+
+    @staticmethod
+    def test_rem_any() -> None:
         with pytest.warns(
-            hooksff.ReturnHookWarning,
-            match=r"Probably this isn't what you want\. Try `return_hook_for`"
-            r" instead\.",
+            RuntimeWarning,
+            match=r"rem_any should not be passed to _is_dupe; it should be"
+            r" handled in is_dupe",
         ):
-            return hooksff.Return("Hi")
-
-    assert hookable(1, 2, z=3) == "Hi"
-
-
-def test_change():
-    @hooksff.hook_for("**test")
-    def change_args(x, y, z):
-        return hooksff.Change(3, 3, z=3)
-
-    assert hookable(1, 2, z=3) == 9
+            hooksff._is_dupe(func1, func1, "rem_any")
+        with pytest.warns(
+            RuntimeWarning,
+            match=r"rem_any should not be passed to _is_dupe; it should be"
+            r" handled in is_dupe",
+        ):
+            hooksff._is_dupe(func1, func2, "rem_any")
 
 
-def test_return_hooks_1():
-    @hooksff.return_hook_for("**test")
-    def return_hook(rv):
-        return rv + 1
+class Testis_dupe:
+    @staticmethod
+    def test_rem_nothing() -> None:
+        assert not hooksff.is_dupe(func1, func1, "rem_nothing")
+        assert not hooksff.is_dupe(func1, func2, "rem_nothing")
 
-    assert hookable(1, 2, z=3) == 7
+    @staticmethod
+    def test_rem_name() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_name")
+        assert not hooksff.is_dupe(func1, func2, "rem_name")
+
+    @staticmethod
+    def test_rem_qualname() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_qualname")
+        assert not hooksff.is_dupe(func1, func2, "rem_qualname")
+
+    @staticmethod
+    def test_rem_mod_qualname() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_mod_qualname")
+        assert not hooksff.is_dupe(func1, func2, "rem_mod_qualname")
+
+    @staticmethod
+    def test_rem_equals() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_equals")
+        assert not hooksff.is_dupe(func1, func2, "rem_equals")
+
+    @staticmethod
+    def test_rem_is() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_is")
+        assert not hooksff.is_dupe(func1, func2, "rem_is")
+
+    @staticmethod
+    def test_rem_code() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_code")
+        assert not hooksff.is_dupe(func1, func2, "rem_code")
+
+    @staticmethod
+    def test_rem_any() -> None:
+        assert hooksff.is_dupe(func1, func1, "rem_any")
+        assert not hooksff.is_dupe(func1, func2, "rem_any")
 
 
-def test_return_hooks_2():
-    @hooksff.return_hook_for("**test")
-    def return_hook(rv):
-        return rv
+class Testalready_exists:
+    @staticmethod
+    def test_rem_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+        mock = Mock()
+        with monkeypatch.context() as mp:
+            mp.setattr("builtins.any", mock)
+            assert not hooksff.already_exists([func1], func1, "rem_nothing")
+            assert not hooksff.already_exists([func1], func2, "rem_nothing")
+        mock.assert_not_called()
 
-    assert hookable(1, 2, z=3) == 6
+    @staticmethod
+    def test_rem_name() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_name")
+        assert not hooksff.already_exists([func1], func2, "rem_name")
+
+    @staticmethod
+    def test_rem_qualname() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_qualname")
+        assert not hooksff.already_exists([func1], func2, "rem_qualname")
+
+    @staticmethod
+    def test_rem_mod_qualname() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_mod_qualname")
+        assert not hooksff.already_exists([func1], func2, "rem_mod_qualname")
+
+    @staticmethod
+    def test_rem_equals() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_equals")
+        assert not hooksff.already_exists([func1], func2, "rem_equals")
+
+    @staticmethod
+    def test_rem_is() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_is")
+        assert not hooksff.already_exists([func1], func2, "rem_is")
+
+    @staticmethod
+    def test_rem_code() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_code")
+        assert not hooksff.already_exists([func1], func2, "rem_code")
+
+    @staticmethod
+    def test_rem_any() -> None:
+        assert hooksff.already_exists([func1], func1, "rem_any")
+        assert not hooksff.already_exists([func1], func2, "rem_any")
 
 
-def test_return_hooks_3():
-    @hooksff.return_hook_for("**test")
-    def return_hook(rv):
-        return rv - 3
-
-    assert hookable(1, 2, z=3) == 3
-
-
-def test_return_hooks_4():
-    @hooksff.return_hook_for("**test")
-    def return_hook(rv):
-        # this is just for testing, DO NOT use something like this in
-        # production; return hook's return value should match original
-        # function's return value!
-        pass
-
-    assert hookable(1, 2, z=3) is None
+def test_hook_for(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+    mock = Mock()
+    hooksff.hook_for(HOOKABLE_NAME)(mock)
+    mock.assert_not_called()
+    assert hooksff.hooks[HOOKABLE_NAME] == [mock]
+    assert hooksff.return_hooks.get(HOOKABLE_NAME) is None
 
 
-def test_return_hooks_5():
-    @hooksff.mark_as_hookable("**test2")
-    def test2(txt: str):
-        return "yes" if txt.strip() else "no"
-
-    assert test2("  ") == "no"
-    assert test2("quick fox") == "yes"
-
-    @hooksff.return_hook_for("**test2")
-    def return_hook(rv):
-        return "Super! :)" if rv == "yes" else "Nope :("
-
-    assert test2("  ") == "Nope :("
-    assert test2("quick fox") == "Super! :)"
+def test_return_hook_for(hookable: Callable[[int, int], int]) -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+    mock = Mock()
+    hooksff.return_hook_for(HOOKABLE_NAME)(mock)
+    mock.assert_not_called()
+    assert hooksff.hooks.get(HOOKABLE_NAME) is None
+    assert hooksff.return_hooks[HOOKABLE_NAME] == [mock]
