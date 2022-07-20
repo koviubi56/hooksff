@@ -12,3 +12,92 @@
 ![PyPI](https://img.shields.io/pypi/v/hooksff)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hooksff)
 ![PyPI - Format](https://img.shields.io/pypi/format/hooksff)
+
+hooksff is a [Python library](https://docs.python.org/3/glossary.html#term-module) for making hooks.
+
+## Installation
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install hooksff. _[Need more help?](https://packaging.python.org/en/latest/tutorials/installing-packages/)_
+
+```bash
+pip install hooksff
+```
+
+## Usage
+
+For more information, see the [wiki](https://github.com/koviubi56/hooksff/wiki).
+
+### Return hooks
+
+```python
+>>> import hooksff
+>>> @hooksff.mark_as_hookable("my_hook")
+... def my_func(x, y):
+...     return x + y
+>>> my_func(1, 2)
+3
+>>> @hooksff.return_hook_for("my_hook")
+... def my_hook(rv):
+...     return rv * 2
+>>> my_func(1, 2)
+6
+```
+
+### "DoNothing" hooks
+
+```python
+>>> import hooksff
+>>> @hooksff.mark_as_hookable("my_hook")
+... def my_func(x, y):
+...     return x + y
+>>> my_func(1, 2)
+3
+>>> @hooksff.hook_for("my_hook")
+... def nothing(x, y):
+...     return
+...     # or `return hooksff.DoNothing()`
+>>> my_func(1, 2)
+3
+```
+
+### "Return" hooks
+
+```python
+>>> import hooksff
+>>> @hooksff.mark_as_hookable("my_hook")
+... def my_func(x, y):
+...     return x + y
+>>> my_func(1, 2)
+3
+>>> @hooksff.hook_for("my_hook")
+... def return_hook(x, y):
+...     return hooksff.Return(x - y)
+>>> my_func(1, 2)
+-1
+```
+
+### "Change" hooks
+
+```python
+>>> import hooksff
+>>> @hooksff.mark_as_hookable("my_hook")
+... def my_func(x, y):
+...     return x + y
+>>> my_func(1, 2)
+3
+>>> @hooksff.hook_for("my_hook")
+... def change_hook(x, y):
+...     return hooksff.Change(x, 6)
+>>> my_func(1, 2)
+7
+```
+
+## Contributing
+
+[Pull requests](https://github.com/koviubi56/hooksff/blob/main/CONTRIBUTING.md#pull-requests) are welcome. For major changes, please [open an issue first](https://github.com/koviubi56/hooksff/issues/new/choose) to discuss what you would like to change.
+
+Please make sure to update [tests](https://docs.pytest.org/en/stable/getting-started.html) as appropriate, and add entries to [the changelog](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE)
