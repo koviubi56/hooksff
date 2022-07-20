@@ -99,6 +99,14 @@ For more information, see the [wiki](https://github.com/koviubi56/hooksff/wiki).
 7
 ```
 
+## Support
+
+Questions should be asked in the [Discussions tab](https://github.com/koviubi56/hooksff/discussions/categories/q-a).
+
+Feature requests and bug reports should be reported in the [Issues tab](https://github.com/koviubi56/hooksff/issues/new/choose).
+
+Security vulnerabilities should be reported as described in our [Security policy](https://github.com/koviubi56/hooksff/security/policy) _(the [SECURITY.md](SECURITY.md) file)_.
+
 ## Contributing
 
 [Pull requests](https://github.com/koviubi56/hooksff/blob/main/CONTRIBUTING.md#pull-requests) are welcome. For major changes, please [open an issue first](https://github.com/koviubi56/hooksff/issues/new/choose) to discuss what you would like to change.
