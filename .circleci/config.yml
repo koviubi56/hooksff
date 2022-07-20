@@ -10,6 +10,7 @@ orbs:
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@1.5.0
+  codecov: codecov/codecov@3
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -40,16 +41,9 @@ jobs:
             mkdir test-results
             coverage run -m pytest --junitxml=test-results/junit.xml
             coverage xml
-            curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-            curl -Os https://uploader.codecov.io/latest/linux/codecov
-            curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-            curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-            gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-            shasum -a 256 -c codecov.SHA256SUM
-            chmod +x codecov
-            ./codecov -t ${CODECOV_TOKEN}
             cat test-results/junit.xml > /tmp/artifacts_junit.xml
             cat coverage.xml > /tmp/artifacts_coverage.xml
+      - codecov/upload
       - store_test_results:
           path: test-results
       - store_artifacts:
