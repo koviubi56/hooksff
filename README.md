@@ -23,6 +23,13 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install hooksff
 pip install hooksff
 ```
 
+## Requirements
+
+hooksff requires Python 3.7 or higher.
+The required packages can be found in the [requirements.txt](requirements.txt) file.
+
+_[Click here to see these requirements in the `setup.cfg` file](setup.cfg#L27-L29)_
+
 ## Usage
 
 For more information, see the [wiki](https://github.com/koviubi56/hooksff/wiki).
