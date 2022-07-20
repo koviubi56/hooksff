@@ -89,7 +89,7 @@ class DoNothing(HookResponse):  # Default
     __slots__ = ()
 
 
-class ReturnHookWarning(UserWarning):
+class ReturnHookResponseWarning(UserWarning):
     """Probably this isn't what you want. Try `return_hook_for` instead."""
 
 
@@ -119,7 +119,7 @@ class Return(HookResponse):
             warnings.warn(
                 "Probably this isn't what you want. Try `return_hook_for`"
                 " instead.",
-                ReturnHookWarning,
+                ReturnHookResponseWarning,
                 stacklevel=2,
             )
         self.value = value
