@@ -115,6 +115,10 @@ Please make sure to update [tests](https://docs.pytest.org/en/stable/getting-sta
 
 For more information, please read the [contributing guidelines](CONTRIBUTING.md).
 
+## Authors and acknowledgments
+
+A list of nice people who helped this project can be found in the [CONTRIBUTORS](CONTRIBUTORS) file.
+
 ## License
 
 [MIT](LICENSE)
