@@ -113,6 +113,8 @@ Security vulnerabilities should be reported as described in our [Security policy
 
 Please make sure to update [tests](https://docs.pytest.org/en/stable/getting-started.html) as appropriate, and add entries to [the changelog](CHANGELOG.md).
 
+For more information, please read the [contributing guidelines](CONTRIBUTING.md).
+
 ## License
 
 [MIT](LICENSE)
