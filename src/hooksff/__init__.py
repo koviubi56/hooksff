@@ -160,15 +160,13 @@ def remove_hooks_for(name: str, raise_on_keyerror: bool = False) -> None:
         name is not found. Defaults to False.
 
     Raises:
-        KeyError: If no hooks were found for the given name and
-        `raise_on_keyerror` is truthy.
+        KeyError: If no hooks, and no return hooks were found for the given
+        name and `raise_on_keyerror` is truthy.
     """
-    try:
-        hooks.pop(name)
-        return_hooks.pop(name)
-    except KeyError as e:
-        if raise_on_keyerror:
-            raise KeyError(name) from e
+    h = hooks.pop(name, None)
+    r = return_hooks.pop(name, None)
+    if (raise_on_keyerror) and (h is None) and (r is None):
+        raise KeyError(name)
 
 
 @dataclasses.dataclass(frozen=True, order=True)
