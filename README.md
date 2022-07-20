@@ -1,5 +1,6 @@
 # hooksff
 
+[![Hits-of-Code](https://hitsofcode.com/github/koviubi56/hooksff?branch=main)](https://hitsofcode.com/github/koviubi56/hooksff/view?branch=main)
 ![Codacy grade](https://img.shields.io/codacy/grade/ac166a98fc554f4a919a6cf4aefe7b7c)
 ![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/koviubi56/hooksff)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/koviubi56/hooksff/main.svg)](https://results.pre-commit.ci/latest/github/koviubi56/hooksff/main)
