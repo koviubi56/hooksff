@@ -1,5 +1,6 @@
 """
 HooksFF: hooksff for functions.
+
 MIT License
 
 Copyright (c) 2022 Koviubi56
