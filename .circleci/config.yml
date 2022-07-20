@@ -15,7 +15,55 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
+  lint:
+    docker:
+      - image: cimg/python:3.10.2
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run flake8
+          command: |
+            pip install -U flake8 flake8-2020 flake8-bugbear flake8-builtins flake8-comprehensions dlint flake8-bandit
+            flake8 --count --extend-exclude=*venv* --show-source --statistics -v
+      - run:
+          name: Run pyupgrade
+          command: |
+            pip install -U pyupgrade
+            pyupgrade --py37-plus
+      - run:
+          name: Run setup-cfg-fmt
+          command: |
+            pip install -U setup-cfg-fmt
+            setup_cfg_fmt
+      - run:
+          name: Run yesqa
+          command: |
+            pip install -U yesqa
+            yesqa
+      - run:
+          name: Run pyroma
+          command: |
+            pip install -U pyroma
+            pyroma .
+      - run:
+          name: Run autoflake
+          command: |
+            pip install -U autoflake
+            autoflake -c -r -v .
+      - run:
+          name: Run black
+          command: |
+            pip install -U black
+            black --check -l 79 -v .
+      - run:
+          name: Run pyflakes
+          command: |
+            pip install -U pyflakes
+            pyflakes
+
+  test: # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
     # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
@@ -54,7 +102,10 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+  lint: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
-      - build-and-test
+      - lint
+  test:
+    jobs:
+      - test
