@@ -36,11 +36,11 @@ HOOKABLE_NAME = "test"
 
 
 def func1() -> None:
-    pass
+    """Useless function #1."""
 
 
 def func2() -> None:
-    return None
+    """Useless function #2."""
 
 
 @pytest.fixture(scope="function")
