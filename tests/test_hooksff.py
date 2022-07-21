@@ -154,7 +154,7 @@ def test_run_hooks_for_warns_unknown_response(
     hooksff.remove_hooks_for(HOOKABLE_NAME)
 
     @hooksff.hook_for(HOOKABLE_NAME)
-    def _(x: int, y: int) -> int:
+    def _(x: int, y: int) -> str:
         return "hello"
 
     with pytest.warns():
