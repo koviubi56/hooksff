@@ -83,7 +83,7 @@ R = TypeVar("R")
 class HookResponse(abc.ABC):
     """An ABC for hook responses."""
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         """
         Return a string representation of the hook response.
 
