@@ -62,8 +62,17 @@ import abc
 import dataclasses
 import functools
 import warnings
-from typing import (Any, Callable, Dict, Iterable, List, Literal, Tuple,
-                    TypeVar, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from typing_extensions import ParamSpec
 
