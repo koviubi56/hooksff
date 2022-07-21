@@ -200,6 +200,22 @@ def test_mark_as_hookable() -> None:
     assert _() is None
 
 
+def test_mark_as_hookable_return_hook() -> None:
+    hooksff.remove_hooks_for(HOOKABLE_NAME)
+
+    @hooksff.mark_as_hookable(HOOKABLE_NAME)
+    def _() -> int:
+        return 1
+
+    assert _() == 1
+
+    @hooksff.hook_for(HOOKABLE_NAME)
+    def __h() -> int:
+        return hooksff.Return(3.141592, ignore_warning=True)
+
+    assert _() == 3.141592
+
+
 class Test_is_dupe:
     @staticmethod
     def test_rem_nothing() -> None:
