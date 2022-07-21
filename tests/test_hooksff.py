@@ -168,7 +168,7 @@ def test_run_hooks_for(hookable: Callable[[int, int], int]) -> None:
 
     @hooksff.hook_for(HOOKABLE_NAME)
     def _() -> None:
-        return None
+        """Useless function."""
 
     with pytest.warns(hooksff.HookTypeErrorWarning):
         assert hooksff.run_hooks_for(
