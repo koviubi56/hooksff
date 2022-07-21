@@ -62,9 +62,10 @@ import abc
 import dataclasses
 import functools
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Tuple, TypeVar, Union
+from typing import (Any, Callable, Dict, Iterable, List, Literal, Tuple,
+                    TypeVar, Union)
 
-from typing_extensions import Literal, ParamSpec
+from typing_extensions import ParamSpec
 
 P = ParamSpec("P")
 R = TypeVar("R")
