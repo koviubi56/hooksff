@@ -162,10 +162,10 @@ return_hooks: Dict[str, List[Callable[[R], R]]] = {}
 
 def remove_hooks_for(name: str, raise_on_keyerror: bool = False) -> None:
     """
-    Remove all hooks for the given name.
+    Remove all hooks (including return hooks) for the given name.
 
     Args:
-        name (str): The name of the hooks to remove.
+        name (str): The name of the hookable function.
         raise_on_keyerror (bool, optional): Whether to raise a KeyError if the
         name is not found. Defaults to False.
 
