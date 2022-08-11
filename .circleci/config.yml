@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Run flake8
           command: |
-            pip install -U flake8 flake8-2020 flake8-bugbear flake8-builtins flake8-comprehensions dlint flake8-bandit
+            pip install -U flake8 flake8-2020 flake8-bugbear flake8-builtins flake8-comprehensions
             flake8 --count --extend-exclude=*venv* --show-source --statistics -v
       - run:
           name: Run pyupgrade
