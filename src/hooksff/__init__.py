@@ -58,7 +58,6 @@ __description__ = "Hooks for functions."
 __url__ = "https://github.com/koviubi56/hooksff"
 
 
-import abc
 import dataclasses
 import functools
 import warnings
@@ -80,7 +79,7 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class HookResponse(abc.ABC):
+class HookResponse:
     """An ABC for hook responses."""
 
     def __repr__(self) -> str:  # pragma: no cover
